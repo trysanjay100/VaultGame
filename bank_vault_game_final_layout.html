@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Vault Opening Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2b2d42;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            height: 80%;
+            align-items: center;
+        }
+
+        .left, .right {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 50%;
+        }
+
+        h1 {
+            color: #ffcc00;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        p {
+            font-size: 1.2em;
+            margin: 10px 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        #pinInput {
+            padding: 12px;
+            font-size: 18px;
+            width: 250px;
+            margin: 20px;
+            border-radius: 10px;
+            border: none;
+            text-align: center;
+            background-color: #2f3640;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 18px;
+            background-color: #ffcc00;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 20px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ff9900;
+        }
+
+        .message {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .success {
+            color: #2ed573;
+        }
+
+        .explosion {
+            color: red;
+        }
+
+        /* Vault styles */
+        #vault {
+            width: 250px;
+            height: 250px;
+            background-image: url('https://img.icons8.com/ios/452/safe.png');
+            background-size: contain;
+            background-position: center;
+            transition: transform 1.5s ease;
+        }
+
+        /* Explosion effect */
+        .explosion-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
+            color: red;
+            animation: explode 1.5s forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0.5;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(3);
+                opacity: 0;
+            }
+        }
+
+        /* Vault opening effect */
+        .vault-opened {
+            transform: rotateY(180deg);
+        }
+
+        /* On-screen keyboard */
+        #keyboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .key {
+            padding: 20px;
+            font-size: 18px;
+            background-color: #2f3640;
+            color: white;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .key:hover {
+            background-color: #ff9900;
+        }
+
+        .key:active {
+            background-color: #ff6600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <h1>Bank Vault Opening Game</h1>
+            <p>Guess the 6-digit PIN to open the vault and save the hostages!</p>
+            <p>Be careful! There's a 15% chance the vault will explode with each wrong guess.</p>
+            <input type="text" id="pinInput" maxlength="6" placeholder="Enter 6-digit PIN" readonly />
+            <div class="message" id="message"></div>
+            <!-- Vault Image -->
+            <div id="vault"></div>
+        </div>
+
+        <div class="right">
+            <div id="keyboard">
+                <button class="key" onclick="addKey(1)">1</button>
+                <button class="key" onclick="addKey(2)">2</button>
+                <button class="key" onclick="addKey(3)">3</button>
+                <button class="key" onclick="addKey(4)">4</button>
+                <button class="key" onclick="addKey(5)">5</button>
+                <button class="key" onclick="addKey(6)">6</button>
+                <button class="key" onclick="addKey(7)">7</button>
+                <button class="key" onclick="addKey(8)">8</button>
+                <button class="key" onclick="addKey(9)">9</button>
+                <button class="key" onclick="addKey(0)">0</button>
+                <button class="key" onclick="clearInput()">Clear</button>
+                <button class="key" onclick="submitPin()">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let correctPin = "123456";  // The correct PIN
+        let explosionChance = 0.15;  // 15% chance of explosion
+        let attempts = 0;
+
+        // Function to add key input to the pin field
+        function addKey(number) {
+            let pinInput = document.getElementById("pinInput");
+            if (pinInput.value.length < 6) {
+                pinInput.value += number;
+            }
+        }
+
+        // Function to clear the pin input
+        function clearInput() {
+            document.getElementById("pinInput").value = "";
+        }
+
+        // Function to check the PIN
+        function submitPin() {
+            let userPin = document.getElementById("pinInput").value;
+            let messageDiv = document.getElementById("message");
+            let vault = document.getElementById("vault");
+
+            // Ensure the user input is exactly 6 digits
+            if (userPin.length !== 6 || isNaN(userPin)) {
+                messageDiv.textContent = "Invalid PIN. Please enter exactly 6 digits.";
+                messageDiv.classList.remove("explosion", "success");
+                return;
+            }
+
+            attempts++;
+
+            if (userPin === correctPin) {
+                // Show success message and open the vault
+                messageDiv.textContent = "Congratulations! The vault is open and the hostages are saved!";
+                messageDiv.classList.add("success");
+                messageDiv.classList.remove("explosion");
+                
+                vault.classList.add("vault-opened");  // Rotate vault to simulate opening
+            } else {
+                messageDiv.textContent = "Incorrect PIN.";
+                messageDiv.classList.remove("success");
+                
+                // 15% chance of explosion
+                if (Math.random() < explosionChance) {
+                    // Explosion effect
+                    messageDiv.textContent = "BOOM! The vault exploded! The hostages are lost.";
+                    messageDiv.classList.add("explosion");
+                    
+                    let explosionDiv = document.createElement("div");
+                    explosionDiv.classList.add("explosion-effect");
+                    document.body.appendChild(explosionDiv);
+                    
+                    // Remove explosion effect after animation
+                    setTimeout(() => {
+                        explosionDiv.remove();
+                    }, 1500);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
